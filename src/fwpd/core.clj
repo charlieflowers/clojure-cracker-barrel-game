@@ -69,3 +69,16 @@
 (defn row-pos
   [cell-num]
   (reduce (fn [acc n] (if (= n cell-num) (reduced acc) (inc acc))) 1 (row-range (row-num cell-num))))
+
+(defn cell-at
+  [rownum rowpos]
+  (let [range (row-range rownum)]
+    (cond
+      (<= rowpos 0) nil
+      (> rowpos (count range)) nil
+      :else (nth (row-range rownum) (dec rowpos)))))
+
+(defn upper-neighbors
+  [cell-num]
+  (let [row-above (dec (row-num cell-num)) my-row-pos (row-pos cell-num)]
+    (remove nil? [(cell-at row-above (dec my-row-pos)) (cell-at row-above my-row-pos)])))
