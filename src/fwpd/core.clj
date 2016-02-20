@@ -1,33 +1,5 @@
 (ns fwpd.core)
 
-(def vamp-keys [:name :glitter-index])
-
-(defn str->int
-  [str]
-  (Integer. str))
-
-(def conversions {:name identity
-                  :glitter-index str->int})
-
-(defn convert
-  [vamp-key value]
-  ((get conversions vamp-key) value))
-
-(defn string-to-array
-  [string]
-  (map #(clojure.string/split % #",") (clojure.string/split string #"\r\n")))
-
-(defn mapify
-  [rows]
-  (map (fn [[name index] [name-key index-key]]
-         {name-key name index-key (convert index-key index)})
-       rows
-       (repeat vamp-keys)))
-
-(defn glitter-filter
-  [min-glitter records]
-  (filter #(>= (:glitter-index %) min-glitter) records))
-
 (defn triangle-nums
   ([] (triangle-nums 1 2))
   ([current-val next-inc]
@@ -82,3 +54,11 @@
   [cell-num]
   (let [row-above (dec (row-num cell-num)) my-row-pos (row-pos cell-num)]
     (remove nil? [(cell-at row-above (dec my-row-pos)) (cell-at row-above my-row-pos)])))
+
+(defn letter-for
+  [cell-num]
+  (char (+ 96 cell-num)))
+
+(defn cell-for
+  [letter]
+  (- (int letter) 96))
