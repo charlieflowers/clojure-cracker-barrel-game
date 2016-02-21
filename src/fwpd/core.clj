@@ -1,4 +1,5 @@
 (ns fwpd.core)
+(use '[clojure.string :only (join split)])
 
 (defn triangle-nums
   ([] (triangle-nums 1 2))
@@ -62,3 +63,34 @@
 (defn cell-for
   [letter]
   (- (int letter) 96))
+
+(defn prefix-spaces
+  [max-row-num row-num]
+  (apply str (repeat (cond
+                       (<= row-num max-row-num) 0
+                       :else
+                       (* (- row-num max-row-num) 2)) " ")))
+
+(defn render-peg
+  [cell]
+  (cond
+    (:is-pegged cell) "0"
+    :else "-"))
+
+(defn render-cells
+  [cells]
+  (map (fn [c] (str (letter-for (:cell-num c)) (render-peg c))) cells))
+
+(defn render-row
+  [row-num max-row-num row]
+  (str (prefix-spaces row-num max-row-num) (join "  " (render-cells row))))
+
+(defn render-board-to-seq
+  [board]
+  (let [row-count (count (keys board))]
+    (map (fn [row-num] (render-row row-num row-count (board row-num))) (range-from-1 row-count))))
+
+(defn render-board
+  [board]
+  (let [render-row (fn [])]))
+
