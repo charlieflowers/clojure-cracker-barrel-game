@@ -90,7 +90,10 @@
   (let [row-count (count (keys board))]
     (map (fn [row-num] (render-row row-num row-count (board row-num))) (range-from-1 row-count))))
 
-(defn render-board
+(defn render-board-to-console
   [board]
-  (let [render-row (fn [])]))
+  (doseq [row (render-board-to-seq board)]
+    (println row)))
+
+
 
