@@ -4,7 +4,7 @@
 (defn triangle-nums
   ([] (triangle-nums 1 2))
   ([current-val next-inc]
-    (lazy-seq (cons current-val (triangle-nums (+ current-val next-inc) (inc next-inc))))))
+   (lazy-seq (cons current-val (triangle-nums (+ current-val next-inc) (inc next-inc))))))
 
 (defn row-end
   [row-num]
@@ -21,7 +21,7 @@
 
 (defn make-cell
   [cell-num]
-  {:cell-num cell-num :is-pegged true })
+  {:cell-num cell-num :is-pegged true})
 
 (defn make-row
   [row-num]
@@ -47,9 +47,10 @@
   [rownum rowpos]
   (let [range (row-range rownum)]
     (cond
-      (<= rowpos 0) nil
-      (> rowpos (count range)) nil
-      :else (nth (row-range rownum) (dec rowpos)))))
+      (<= rownum 0) {:cellnum nil :valid false :reason :off-top-of-board}
+      (<= rowpos 0) {:cellnum nil :valid false :reason :off-left-side-of-board}
+      (> rowpos (count range)) {:cellnum nil :valid false :reason :off-right-side-of-board}
+      :else {:cellnum (nth (row-range rownum) (dec rowpos)) :valid true :reason nil})))
 
 ;(defn upper-neighbors
 ;  [cell-num]
@@ -98,8 +99,8 @@
 (defn apply-delta
   [cellnum row-delta rowpos-delta]
   (let [start-row (row-num cellnum) start-rowpos (row-pos cellnum)]
-    {:new-row (+ start-row row-delta) :new-rowpos (+ start-rowpos rowpos-delta)})
-  )
+    {:new-row (+ start-row row-delta) :new-rowpos (+ start-rowpos rowpos-delta)}))
+
 (defn neighbor-candidates
   [cellnum]
   (let [candidates
@@ -109,5 +110,11 @@
          {:neighbor-desc :upper-right :row-delta -1 :rowpos-delta 0}
          {:neighbor-desc :lower-left :row-delta 1 :rowpos-delta 0}
          {:neighbor-desc :lower-right :row-delta 1 :rowpos-delta 1}]]
-    ))
+    (map (fn [c]
+           (let [{rownum :new-row rowpos :new-rowpos} (apply-delta cellnum (:row-delta c) (:rowpos-delta c))]
+             (merge (cell-at rownum rowpos) {:rownum rownum :rowpos rowpos} c)
+             #_ [c (cell-at (:new-row neighbor-cell-coords) (:new-rowpos neighbor-cell-coords))]
+             ))
+         candidates)))
+
 
