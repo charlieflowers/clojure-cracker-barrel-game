@@ -51,16 +51,16 @@
       (> rowpos (count range)) nil
       :else (nth (row-range rownum) (dec rowpos)))))
 
-(defn upper-neighbors
-  [cell-num]
-  (let [row-above (dec (row-num cell-num)) my-row-pos (row-pos cell-num)]
-    (remove nil? [(cell-at row-above (dec my-row-pos)) (cell-at row-above my-row-pos)])))
+;(defn upper-neighbors
+;  [cell-num]
+;  (let [row-above (dec (row-num cell-num)) my-row-pos (row-pos cell-num)]
+;    (remove nil? [(cell-at row-above (dec my-row-pos)) (cell-at row-above my-row-pos)])))
 
-(defn letter-for
+(defn cellnum->letter
   [cell-num]
   (char (+ 96 cell-num)))
 
-(defn cell-for
+(defn letter->cellnum
   [letter]
   (- (int letter) 96))
 
@@ -79,7 +79,7 @@
 
 (defn render-cells
   [cells]
-  (map (fn [c] (str (letter-for (:cell-num c)) (render-peg c))) cells))
+  (map (fn [c] (str (cellnum->letter (:cell-num c)) (render-peg c))) cells))
 
 (defn render-row
   [row-num max-row-num row]
@@ -95,5 +95,19 @@
   (doseq [row (render-board-to-seq board)]
     (println row)))
 
-
+(defn apply-delta
+  [cellnum row-delta rowpos-delta]
+  (let [start-row (row-num cellnum) start-rowpos (row-pos cellnum)]
+    {:new-row (+ start-row row-delta) :new-rowpos (+ start-rowpos rowpos-delta)})
+  )
+(defn neighbor-candidates
+  [cellnum]
+  (let [candidates
+        [{:neighbor-desc :left :row-delta 0 :rowpos-delta -1}
+         {:neighbor-desc :right :row-delta 0 :rowpos-delta 1}
+         {:neighbor-desc :upper-left :row-delta -1 :rowpos-delta -1}
+         {:neighbor-desc :upper-right :row-delta -1 :rowpos-delta 0}
+         {:neighbor-desc :lower-left :row-delta 1 :rowpos-delta 0}
+         {:neighbor-desc :lower-right :row-delta 1 :rowpos-delta 1}]]
+    ))
 
