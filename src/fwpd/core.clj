@@ -45,12 +45,11 @@
 
 (defn cell-at
   [rownum rowpos]
-  (let [range (row-range rownum)]
-    (cond
-      (<= rownum 0) {:cellnum nil :valid false :reason :off-top-of-board}
-      (<= rowpos 0) {:cellnum nil :valid false :reason :off-left-side-of-board}
-      (> rowpos (count range)) {:cellnum nil :valid false :reason :off-right-side-of-board}
-      :else {:cellnum (nth (row-range rownum) (dec rowpos)) :valid true :reason nil})))
+  (cond
+    (<= rownum 0) {:cellnum nil :valid false :reason :off-top-of-board}
+    (<= rowpos 0) {:cellnum nil :valid false :reason :off-left-side-of-board}
+    (> rowpos (count (row-range rownum))) {:cellnum nil :valid false :reason :off-right-side-of-board}
+    :else {:cellnum (nth (row-range rownum) (dec rowpos)) :valid true :reason nil}))
 
 ;(defn upper-neighbors
 ;  [cell-num]
@@ -102,19 +101,20 @@
     {:new-row (+ start-row row-delta) :new-rowpos (+ start-rowpos rowpos-delta)}))
 
 (defn neighbor-candidates
-  [cellnum]
+  [cellnum maxrow]
   (let [candidates
-        [{:neighbor-desc :left :row-delta 0 :rowpos-delta -1}
-         {:neighbor-desc :right :row-delta 0 :rowpos-delta 1}
-         {:neighbor-desc :upper-left :row-delta -1 :rowpos-delta -1}
-         {:neighbor-desc :upper-right :row-delta -1 :rowpos-delta 0}
-         {:neighbor-desc :lower-left :row-delta 1 :rowpos-delta 0}
-         {:neighbor-desc :lower-right :row-delta 1 :rowpos-delta 1}]]
+        [{:desc :left :row-delta 0 :rowpos-delta -1}
+         {:desc :right :row-delta 0 :rowpos-delta 1}
+         {:desc :upper-left :row-delta -1 :rowpos-delta -1}
+         {:desc :upper-right :row-delta -1 :rowpos-delta 0}
+         {:desc :lower-left :row-delta 1 :rowpos-delta 0}
+         {:desc :lower-right :row-delta 1 :rowpos-delta 1}]]
     (map (fn [c]
-           (let [{rownum :new-row rowpos :new-rowpos} (apply-delta cellnum (:row-delta c) (:rowpos-delta c))]
-             (merge (cell-at rownum rowpos) {:rownum rownum :rowpos rowpos} c)
-             #_ [c (cell-at (:new-row neighbor-cell-coords) (:new-rowpos neighbor-cell-coords))]
-             ))
-         candidates)))
+           (let [{rownum :new-row rowpos :new-rowpos} (apply-delta cellnum (:row-delta c) (:rowpos-delta c))
+                 neighbor (cell-at rownum rowpos)
+                 nmap (if (> rownum maxrow)
+                        (assoc neighbor :valid false :reason :off-bottom-of-board)
+                        neighbor)]
+             (merge nmap {:rownum rownum :rowpos rowpos} c))) candidates)))
 
 
