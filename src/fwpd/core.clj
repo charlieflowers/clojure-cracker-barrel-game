@@ -27,21 +27,25 @@
   (let [start-cell (row-start row-num) end-cell (row-end row-num)]
     (range start-cell (inc end-cell))))
 
-(defn make-cell
-  [cell-num]
-  {:cell-num cell-num :is-pegged true})
-
-(defn make-row
-  [row-num]
-  (map (fn [cell-num] (make-cell cell-num)) (row-range row-num)))
+;(defn make-cell
+;  [cell-num]
+;  {:cell-num cell-num :is-pegged true})
+;
+;(defn make-row
+;  [row-num]
+;  (map (fn [cell-num] (make-cell cell-num)) (row-range row-num)))
 
 (defn range-from-1
   [count]
   (range 1 (inc count)))
 
+;(defn make-board
+;  [num-rows]
+;  (reduce (fn [acc rownum] (assoc acc rownum (make-row rownum))) {} (range-from-1 num-rows)))
+
 (defn make-board
   [num-rows]
-  (reduce (fn [acc rownum] (assoc acc rownum (make-row rownum))) {} (range-from-1 num-rows)))
+  (reduce (fn [acc cellnum] (assoc acc cellnum true)) (sorted-map) (range-from-1 (row-end num-rows))))
 
 (defn row-num
   [cell-num]
@@ -80,23 +84,36 @@
                        (* (- row-num max-row-num) 2)) " ")))
 
 (defn render-peg
-  [cell]
+  [is-pegged]
   (cond
-    (:is-pegged cell) "0"
+    is-pegged "0"
     :else "-"))
 
+;(defn render-cells
+;  [cells]
+;  (map (fn [c] (str (cellnum->letter (:cell-num c)) (render-peg c))) cells))
+
+;(defn render-row
+;  [row-num max-row-num row]
+;  (str (prefix-spaces row-num max-row-num) (join "  " (render-cells row))))
+
 (defn render-cells
-  [cells]
-  (map (fn [c] (str (cellnum->letter (:cell-num c)) (render-peg c))) cells))
+  [row-num board]
+  (map (fn [cellnum] (str (cellnum->letter cellnum) (render-peg (board cellnum)))) (row-range row-num)))
 
 (defn render-row
-  [row-num max-row-num row]
-  (str (prefix-spaces row-num max-row-num) (join "  " (render-cells row))))
+  [row-num max-row-num board]
+  (str (prefix-spaces row-num max-row-num) (join "  " (render-cells row-num board))))
+
+;(defn render-board-to-seq
+;  [board]
+;  (let [row-count (count (keys board))]
+;    (map (fn [row-num] (render-row row-num row-count (board row-num))) (range-from-1 row-count))))
 
 (defn render-board-to-seq
   [board]
-  (let [row-count (count (keys board))]
-    (map (fn [row-num] (render-row row-num row-count (board row-num))) (range-from-1 row-count))))
+  (let [max-cell (apply max (keys board)) row-count (row-num max-cell)]
+    (map (fn [row-num] (render-row row-num row-count board)) (range-from-1 row-count))))
 
 (defn render-board-to-console
   [board]
@@ -124,6 +141,10 @@
   (map (fn [d]
          (let [{rownum :new-row rowpos :new-rowpos} (apply-direction cellnum d)
                neighbor (scalp-at-bottom-of-board rownum maxrow (cell-at rownum rowpos))]
-           {:startcell cellnum :direction {d (directions d)} :neighbor (merge neighbor {:rownum rownum :rowpos rowpos})}  #_ (merge neighbor {:startcell cellnum :rownum rownum :rowpos rowpos} {d (directions d)}))) (keys directions)))
+           {:startcell cellnum :direction {d (directions d)} :neighbor (merge neighbor {:rownum rownum :rowpos rowpos})}  #_(merge neighbor {:startcell cellnum :rownum rownum :rowpos rowpos} {d (directions d)}))) (keys directions)))
 
 
+
+(defn move-candidates
+  [cellnum board]
+  )
