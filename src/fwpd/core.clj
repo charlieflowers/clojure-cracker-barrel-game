@@ -1,6 +1,14 @@
 (ns fwpd.core)
 (use '[clojure.string :only (join split)])
 
+(def directions
+  {:west      {:row-delta 0 :rowpos-delta -1}
+   :east      {:row-delta 0 :rowpos-delta 1}
+   :northwest {:row-delta -1 :rowpos-delta -1}
+   :northeast {:row-delta -1 :rowpos-delta 0}
+   :southwest {:row-delta 1 :rowpos-delta 0}
+   :southeast {:row-delta 1 :rowpos-delta 1}})
+
 (defn triangle-nums
   ([] (triangle-nums 1 2))
   ([current-val next-inc]
@@ -100,21 +108,22 @@
   (let [start-row (row-num cellnum) start-rowpos (row-pos cellnum)]
     {:new-row (+ start-row row-delta) :new-rowpos (+ start-rowpos rowpos-delta)}))
 
+(defn apply-direction
+  [cellnum direction]
+  (let [{:keys [row-delta rowpos-delta]} (directions direction)]
+    (apply-delta cellnum row-delta rowpos-delta)))
+
+(defn scalp-at-bottom-of-board
+  [rownum maxrow neighbor]
+  (if (> rownum maxrow)
+    (assoc neighbor :valid false :reason :off-bottom-of-board)
+    neighbor))
+
 (defn neighbor-candidates
   [cellnum maxrow]
-  (let [candidates
-        [{:desc :left :row-delta 0 :rowpos-delta -1}
-         {:desc :right :row-delta 0 :rowpos-delta 1}
-         {:desc :upper-left :row-delta -1 :rowpos-delta -1}
-         {:desc :upper-right :row-delta -1 :rowpos-delta 0}
-         {:desc :lower-left :row-delta 1 :rowpos-delta 0}
-         {:desc :lower-right :row-delta 1 :rowpos-delta 1}]]
-    (map (fn [c]
-           (let [{rownum :new-row rowpos :new-rowpos} (apply-delta cellnum (:row-delta c) (:rowpos-delta c))
-                 neighbor (cell-at rownum rowpos)
-                 nmap (if (> rownum maxrow)
-                        (assoc neighbor :valid false :reason :off-bottom-of-board)
-                        neighbor)]
-             (merge nmap {:rownum rownum :rowpos rowpos} c))) candidates)))
+  (map (fn [d]
+         (let [{rownum :new-row rowpos :new-rowpos} (apply-direction cellnum d)
+               neighbor (scalp-at-bottom-of-board rownum maxrow (cell-at rownum rowpos))]
+           {:startcell cellnum :direction {d (directions d)} :neighbor (merge neighbor {:rownum rownum :rowpos rowpos})}  #_ (merge neighbor {:startcell cellnum :rownum rownum :rowpos rowpos} {d (directions d)}))) (keys directions)))
 
 
