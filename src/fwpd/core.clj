@@ -143,8 +143,6 @@
                neighbor (scalp-at-bottom-of-board rownum maxrow (cell-at rownum rowpos))]
            {:startcell cellnum :direction {d (directions d)} :neighbor (merge neighbor {:rownum rownum :rowpos rowpos})}  #_(merge neighbor {:startcell cellnum :rownum rownum :rowpos rowpos} {d (directions d)}))) (keys directions)))
 
-
-
 (defn move-candidates
   [cellnum board]
   )
