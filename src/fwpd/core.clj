@@ -1,5 +1,6 @@
 (ns fwpd.core)
 (use '[clojure.string :only (join split)])
+(use '[clojure.set :only (rename-keys)])
 
 (def directions
   {:west      {:row-delta 0 :rowpos-delta -1}
@@ -110,9 +111,13 @@
 ;  (let [row-count (count (keys board))]
 ;    (map (fn [row-num] (render-row row-num row-count (board row-num))) (range-from-1 row-count))))
 
+(defn board-max-row
+  [board]
+  (apply max (keys board)))
+
 (defn render-board-to-seq
   [board]
-  (let [max-cell (apply max (keys board)) row-count (row-num max-cell)]
+  (let [max-cell (board-max-row board) row-count (row-num max-cell)]
     (map (fn [row-num] (render-row row-num row-count board)) (range-from-1 row-count))))
 
 (defn render-board-to-console
@@ -120,15 +125,15 @@
   (doseq [row (render-board-to-seq board)]
     (println row)))
 
-(defn apply-delta
+(defn delta->coords
   [cellnum row-delta rowpos-delta]
   (let [start-row (row-num cellnum) start-rowpos (row-pos cellnum)]
     {:new-row (+ start-row row-delta) :new-rowpos (+ start-rowpos rowpos-delta)}))
 
-(defn apply-direction
+(defn direction->coords
   [cellnum direction]
   (let [{:keys [row-delta rowpos-delta]} (directions direction)]
-    (apply-delta cellnum row-delta rowpos-delta)))
+    (delta->coords cellnum row-delta rowpos-delta)))
 
 (defn scalp-at-bottom-of-board
   [rownum maxrow neighbor]
@@ -136,13 +141,21 @@
     (assoc neighbor :valid false :reason :off-bottom-of-board)
     neighbor))
 
+(defn apply-direction
+  [cellnum d maxrow]
+  (let [{rownum :new-row rowpos :new-rowpos} (direction->coords cellnum d)
+        destination (scalp-at-bottom-of-board rownum maxrow (cell-at rownum rowpos))]
+    {:startcell cellnum :direction {d (directions d)} :destination (merge destination {:rownum rownum :rowpos rowpos})}))
+
 (defn neighbor-candidates
   [cellnum maxrow]
-  (map (fn [d]
-         (let [{rownum :new-row rowpos :new-rowpos} (apply-direction cellnum d)
-               neighbor (scalp-at-bottom-of-board rownum maxrow (cell-at rownum rowpos))]
-           {:startcell cellnum :direction {d (directions d)} :neighbor (merge neighbor {:rownum rownum :rowpos rowpos})}  #_(merge neighbor {:startcell cellnum :rownum rownum :rowpos rowpos} {d (directions d)}))) (keys directions)))
+  (map (fn [direction] (rename-keys (apply-direction cellnum direction maxrow) {:destination :neighbor})) (keys directions)))
 
-(defn move-candidates
+(defn raw-move-candidates
   [cellnum board]
-  )
+  (let [maxrow (board-max-row board)
+        the-neighbor-candidates (neighbor-candidates cellnum maxrow)]
+    (map (fn [{:keys [direction neighbor] :as nc}]
+           (cond
+             (not (neighbor :valid)) (assoc nc :target {:cellnum nil :valid false :reason :neighbor-is-invalid})
+             :else (assoc nc :target (:destination (apply-direction (:cellnum neighbor) (first (keys direction)) maxrow))))) the-neighbor-candidates)))
