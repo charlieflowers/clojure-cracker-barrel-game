@@ -159,3 +159,20 @@
            (cond
              (not (neighbor :valid)) (assoc nc :target {:cellnum nil :valid false :reason :neighbor-is-invalid})
              :else (assoc nc :target (:destination (apply-direction (:cellnum neighbor) (first (keys direction)) maxrow))))) the-neighbor-candidates)))
+
+(defn pegged-move-candidates
+  [cellnum board raw-move-candidates]
+  (map (fn [{:keys [neighbor target] :as rmc}]
+         (if (and (:valid neighbor) (:valid target))
+           (assoc-in (assoc-in rmc [:neighbor :is-pegged] (board (neighbor :cellnum))) [:target :is-pegged] (board (target :cellnum)))
+           rmc)) raw-move-candidates))
+
+(defn final-move-candidates
+  [cellnum pegged-move-candidates]
+  (map (fn [{:keys [neighbor target] :as pmc}]
+         (cond
+           (not (:valid neighbor)) (assoc pmc :move {:valid false :reason :bad-neighbor})
+           (not (:valid target)) (assoc pmc :move {:valid false :reason :bad-target})
+           (not (:is-pegged neighbor)) (assoc pmc :move {:valid false :reason :cant-jump-an-empty-cell})
+           (:is-pegged target) (assoc pmc :move {:valid false :reason :cant-jump-to-a-cell-that-is-occupied})
+           :else (assoc pmc :move {:valid true :reason nil}))) pegged-move-candidates))
