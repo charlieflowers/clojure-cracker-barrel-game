@@ -117,7 +117,7 @@
 
 (defn render-board-to-seq
   [board]
-  (let [max-cell (board-max-row board) row-count (row-num max-cell)]
+  (let [row-count (board-max-row board)]
     (map (fn [row-num] (render-row row-num row-count board)) (range-from-1 row-count))))
 
 (defn render-board-to-console
@@ -205,18 +205,37 @@
 (defn remove-first-peg
   [board peg]
   (if (all-full? board)
-    (assoc board (letter->cellnum peg) false)
-    board))
+    (status (assoc board (letter->cellnum peg) false))
+    (status board)))
 
 (defn moves
   [board]
   (let [mvs (legal-moves board)]
     (if (empty? mvs)
       (println "Sorry, you don't have any more moves!")
-      (doseq [option (map (fn [lm nbr] [ nbr (cellnum->letter (:startcell lm)) (cellnum->letter (get-in lm [:target :cellnum]))]) (legal-moves board) (iterate inc 1))]
+      (doseq [option (map (fn [lm nbr] [nbr (cellnum->letter (:startcell lm)) (cellnum->letter (get-in lm [:target :cellnum]))]) (legal-moves board) (iterate inc 1))]
         (println (first option) ": from " (second option) " to " (last option)))))
-  board)
+  (status board))
 
+(defn remove-peg
+  [cellnum board]
+  (assoc board cellnum false))
+
+(defn add-peg
+  [cellnum board]
+  (assoc board cellnum true))
+
+(defn move
+  [board from-letter to-letter]
+  (let [the-legal-moves (legal-moves board)
+        from-cell (letter->cellnum from-letter)
+        to-cell (letter->cellnum to-letter)
+        this-move (first (filter (fn [lm] (and (= (lm :startcell) from-cell) (= (get-in lm [:target :cellnum])))) the-legal-moves))]
+        (if (not this-move)
+          (do
+            (println "That is not a legal move!")
+            (status board))
+          (status (remove-peg from-cell (remove-peg (get-in this-move [:neighbor :cellnum]) (add-peg to-cell board)))))))
 
 
 
