@@ -199,13 +199,22 @@
   (cond
     (all-full? board) (println "You need to remove a peg")
     (not (any-moves? board)) (println "Game over, no moves!")
-    :else (println "still got life left in ya, keep going")))
+    :else (println "still got life left in ya, keep going"))
+  board)
 
 (defn remove-first-peg
   [board peg]
   (if (all-full? board)
     (assoc board (letter->cellnum peg) false)
     board))
+
+(defn moves
+  [board]
+  (let [mvs (legal-moves board)]
+    (if (empty? mvs)
+      (println "Sorry, you don't have any more moves!")
+      (doseq [option (map (fn [lm nbr] [ nbr (cellnum->letter (:startcell lm)) (cellnum->letter (get-in lm [:target :cellnum]))]) (legal-moves board) (iterate inc 1))]
+        (println (first option) ": from " (second option) " to " (last option))))))
 
 
 
