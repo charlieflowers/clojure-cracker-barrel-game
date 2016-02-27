@@ -46,7 +46,7 @@
 
 (defn make-board
   [num-rows]
-  (reduce (fn [acc cellnum] (assoc acc cellnum true)) (sorted-map) (range-from-1 (row-end (inc num-rows)))))
+  (reduce (fn [acc cellnum] (assoc acc cellnum true)) (sorted-map) (range-from-1 (row-end num-rows))))
 
 (defn row-num
   [cell-num]
@@ -214,7 +214,9 @@
     (if (empty? mvs)
       (println "Sorry, you don't have any more moves!")
       (doseq [option (map (fn [lm nbr] [ nbr (cellnum->letter (:startcell lm)) (cellnum->letter (get-in lm [:target :cellnum]))]) (legal-moves board) (iterate inc 1))]
-        (println (first option) ": from " (second option) " to " (last option))))))
+        (println (first option) ": from " (second option) " to " (last option)))))
+  board)
+
 
 
 
