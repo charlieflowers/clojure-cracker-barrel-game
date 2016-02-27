@@ -113,7 +113,7 @@
 
 (defn board-max-row
   [board]
-  (apply max (keys board)))
+  (row-num (apply max (keys board))))
 
 (defn render-board-to-seq
   [board]
@@ -161,14 +161,14 @@
              :else (assoc nc :target (:destination (apply-direction (:cellnum neighbor) (first (keys direction)) maxrow))))) the-neighbor-candidates)))
 
 (defn pegged-move-candidates
-  [cellnum board raw-move-candidates]
+  [board raw-move-candidates]
   (map (fn [{:keys [neighbor target] :as rmc}]
          (if (and (:valid neighbor) (:valid target))
            (assoc-in (assoc-in rmc [:neighbor :is-pegged] (board (neighbor :cellnum))) [:target :is-pegged] (board (target :cellnum)))
            rmc)) raw-move-candidates))
 
 (defn final-move-candidates
-  [cellnum pegged-move-candidates]
+  [pegged-move-candidates]
   (map (fn [{:keys [neighbor target] :as pmc}]
          (cond
            (not (:valid neighbor)) (assoc pmc :move {:valid false :reason :bad-neighbor})
@@ -176,3 +176,27 @@
            (not (:is-pegged neighbor)) (assoc pmc :move {:valid false :reason :cant-jump-an-empty-cell})
            (:is-pegged target) (assoc pmc :move {:valid false :reason :cant-jump-to-a-cell-that-is-occupied})
            :else (assoc pmc :move {:valid true :reason nil}))) pegged-move-candidates))
+
+(defn board-move-candidates
+  [board]
+  (flatten (map (fn [cellnum] (final-move-candidates (pegged-move-candidates board (raw-move-candidates cellnum board)))) (keys board))))
+
+(defn legal-moves
+  [board]
+  (filter (fn [mc] (get-in mc [:move :valid])) (board-move-candidates board)))
+
+(defn all-full?
+  [board]
+  (every? identity (vals board)))
+
+(defn any-moves?
+  [board]
+  )
+
+(defn play
+  [board]
+  (render-board-to-console board)
+  (if (all-full? board) (println "You need to remove a peg")
+                        ))
+
+
