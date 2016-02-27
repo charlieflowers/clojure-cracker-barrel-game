@@ -46,7 +46,7 @@
 
 (defn make-board
   [num-rows]
-  (reduce (fn [acc cellnum] (assoc acc cellnum true)) (sorted-map) (range-from-1 (row-end num-rows))))
+  (reduce (fn [acc cellnum] (assoc acc cellnum true)) (sorted-map) (range-from-1 (row-end (inc num-rows)))))
 
 (defn row-num
   [cell-num]
@@ -191,12 +191,21 @@
 
 (defn any-moves?
   [board]
-  )
+  (some identity (legal-moves board)))
 
-(defn play
+(defn status
   [board]
   (render-board-to-console board)
-  (if (all-full? board) (println "You need to remove a peg")
-                        ))
+  (cond
+    (all-full? board) (println "You need to remove a peg")
+    (not (any-moves? board)) (println "Game over, no moves!")
+    :else (println "still got life left in ya, keep going")))
+
+(defn remove-first-peg
+  [board peg]
+  (if (all-full? board)
+    (assoc board (letter->cellnum peg) false)
+    board))
+
 
 
